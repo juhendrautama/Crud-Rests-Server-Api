@@ -1,20 +1,60 @@
 <?php
+use Firebase\jwt\JWT;
+use Firebase\jwt\Key;
 use Restserver\Libraries\REST_Controller;
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 require APPPATH . 'libraries/REST_Controller.php';
 require APPPATH . 'libraries/Format.php';
-
+require APPPATH . 'libraries/JWT.php';
+require APPPATH . 'libraries/Key.php';
 class Data_admin extends REST_Controller {
-    
+
     function __construct(){
     		 parent::__construct();
-            $this->methods['users_get']['limit'] = 10; // 500 requests per hour per user/key
-            $this->methods['users_post']['limit'] = 100; 
-            $this->methods['users_delete']['limit'] = 100;
             $this->load->model('M_dataadmin');
+
     }
-		
+	
+    public function tes_get(){
+        $hendra=md5("hendra");
+        $key = 'a';
+        $payload = [
+            'user' => 'juhendra utama ali',
+            'email' => 'juhendrautama@gmail.com',
+            'alamat' => 'jambi'
+        ];
+        
+        $jwt = JWT::encode($payload, $key, 'HS512');
+        // $decoded = JWT::decode($jwt, new Key($key, 'HS512'));
+        return $jwt;
+        
+    }
+
+    public function tes2_get(){
+       print_r($this->tes_get());
+        
+    }
+
+
+    public function login_post(){
+       
+        $user = $this->post('user');
+        $pass = md5($_POST['pass']);
+        $token = $this->tes_get();
+        $hsl=$this->M_dataadmin->cek($user,$pass,$token);
+        if($hsl->num_rows() > 0){
+            $this->response([
+                'status' => true,
+                'Pesan'=>'Login Berhasil'
+             ],REST_Controller::HTTP_OK); 
+        }else{
+            $this->response([
+                'status' => false,
+                  'Pesan' =>'Login Gagal',
+              ], REST_Controller::HTTP_BAD_REQUEST); 
+        }
+    }
 		
     public function index_get(){
         $id_admin = $this->get('id_admin');
@@ -86,6 +126,7 @@ class Data_admin extends REST_Controller {
         }
     }
 
+    
     public function index_put(){
         $id_admin = $this->put('id_admin');
         $data=[
